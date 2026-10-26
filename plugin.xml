@@ -203,7 +203,7 @@
             <preference name="DATAROID_DB_ENCRYPTION_ENABLED" value="$DB_ENCRYPTION_ENABLED"/>
             <preference name="DATAROID_CRASH_REPORTING_ENABLED" value="$CRASH_REPORTING_ENABLED"/>
             <preference name="DATAROID_CRASH_REPORTING_THREAD_COLLECTION" value="$CRASH_REPORTING_THREAD_COLLECTION"/>
-            <preference name="deployment-target" value="13.0"/>
+            
         </config-file>
 
         <!--
