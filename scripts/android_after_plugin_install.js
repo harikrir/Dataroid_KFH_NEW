@@ -244,8 +244,10 @@ function validateRequiredConfig(config) {
  */
 function googleServicesCandidates(projectRoot, platformRoot) {
   return [
+  /**
     path.join(projectRoot, "google-services.json"),
     path.join(projectRoot, "www", "google-services.json"),
+     */
     path.join(platformRoot, "app", "google-services.json"),
   ];
 }
