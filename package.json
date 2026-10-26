@@ -1,0 +1,102 @@
+{
+  "name": "cordova-plugin-dataroid-sdk",
+  "version": "4.3.1",
+  "description": "Dataroid Cordova Plugin SDK - Analytics, Push Notifications, In-App Messaging, Geofencing, APM, and more",
+  "main": "www/Dataroid.js",
+  "types": "types/index.d.ts",
+  "cordova": {
+    "id": "cordova-plugin-dataroid-sdk",
+    "platforms": [
+      "android",
+      "ios"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dataroid/sdk-cordova.git"
+  },
+  "keywords": [
+    "cordova",
+    "dataroid",
+    "analytics",
+    "push",
+    "notifications",
+    "in-app",
+    "messaging",
+    "geofencing",
+    "apm",
+    "app-inbox",
+    "context-triggers",
+    "deep-linking",
+    "user-engagement",
+    "mobile-analytics",
+    "ecosystem:cordova",
+    "cordova-android",
+    "cordova-ios"
+  ],
+  "author": "Dataroid Web Team <devteam@dataroid.com>",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/dataroid/sdk-cordova/issues"
+  },
+  "homepage": "https://github.com/dataroid/sdk-cordova#readme",
+  "bin": {
+    "dataroid-crash-reporting": "crash-reporting.js"
+  },
+  "scripts": {
+    "lint": "node --check www/Dataroid.js && node --check scripts/errors.js && node --check scripts/utils.js && node --check scripts/android_after_plugin_install.js && node --check scripts/ios_after_plugin_install.js && node --check crash-reporting.js && node --check crash-reporting-legacy.js && npm run format:check",
+    "format": "prettier --write . --ignore-unknown",
+    "format:check": "prettier --check . --ignore-unknown",
+    "test:unit": "mocha test/ --timeout 10000",
+    "test:coverage": "c8 --reporter=lcov --reporter=text-summary mocha test/ --timeout 10000",
+    "test:android": "test/android/run-tests.sh",
+    "test:ios": "test/ios/run-tests.sh",
+    "test:all": "npm run test && npm run test:android && npm run test:ios",
+    "test": "npm run lint && npm run test:unit",
+    "dev:docs": "node ./dev-resources/docs-updater.js"
+  },
+  "engines": {
+    "cordova": ">=12.0.0",
+    "cordova-android": ">=12.0.0",
+    "cordova-ios": ">=7.0.0",
+    "node": ">=18.0.0"
+  },
+  "cordovaDependencies": {
+    "6.0.0": {
+      "cordova": ">=12.0.0",
+      "cordova-android": ">=12.0.0",
+      "cordova-ios": ">=7.0.0"
+    }
+  },
+  "files": [
+    "www/",
+    "src/",
+    "types/",
+    "scripts/",
+    "crash-reporting.js",
+    "crash-reporting-legacy.js",
+    "plugin.xml",
+    "README.md"
+  ],
+  "devDependencies": {
+    "c8": "^10.1.3",
+    "cordova-ios": "^8.0.1",
+    "chai": "^4.5.0",
+    "chokidar": "5.0.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
+    "mocha": "^11.7.5",
+    "mock-fs": "^5.5.0",
+    "prettier": "^3.8.1",
+    "sinon": "^21.0.1",
+    "yargs": "18.0.0"
+  },
+  "lint-staged": {
+    "*": "prettier --write --ignore-unknown"
+  },
+  "overrides": {
+    "mocha": {
+      "diff": "^8.0.3"
+    }
+  }
+}

@@ -1,0 +1,111 @@
+// Dataroid Cordova Plugin - Android Gradle Configuration
+
+// Read the plugin variables from the same Android string resources the
+// native code reads (DataroidInitProvider), so the dependencies added here
+// always match the features the SDK enables at runtime. cordova-android 15
+// keeps Cordova's own strings in cdv_strings.xml, while the plugin's entries
+// may be in strings.xml, so both files are read key by key.
+def dataroidValuesDir = new File(rootProject.projectDir, 'app/src/main/res/values')
+def dataroidResources = [:]
+['strings.xml', 'cdv_strings.xml'].each { fileName ->
+    def file = new File(dataroidValuesDir, fileName)
+    if (!file.exists()) return
+    def xml
+    try {
+        xml = new groovy.xml.XmlSlurper(false, false).parse(file)
+    } catch (Exception e) {
+        throw new GradleException("[Dataroid] Could not read ${file}: ${e.message}")
+    }
+    xml.string.each { node ->
+        def name = node.@name.text()
+        if (!name.startsWith('dataroid_')) return
+        def value = node.text().trim()
+        def previous = dataroidResources[name]
+        if (previous != null && previous.value != value) {
+            // Values are not printed: dataroid_db_encryption_key is a secret.
+            throw new GradleException("[Dataroid] ${name} has different values in ${previous.file} and ${fileName}. Keep a single definition.")
+        }
+        dataroidResources[name] = [value: value, file: fileName]
+    }
+}
+
+// Same rules as DataroidInitProvider: empty and unreplaced "$VARIABLE"
+// values count as missing, and missing values use the native defaults.
+def dataroidValue = { String name ->
+    def value = dataroidResources[name]?.value
+    (value == null || value.isEmpty() || value.startsWith('$')) ? null : value
+}
+def dataroidFlag = { String name ->
+    def value = dataroidValue(name)
+    value != null && value.equalsIgnoreCase('true')
+}
+def dataroidSource = { String name ->
+    dataroidValue(name) != null ? dataroidResources[name].file : 'default'
+}
+
+def dataroidPushEnabled = dataroidFlag('dataroid_push_enabled')
+def dataroidGeofenceEnabled = dataroidFlag('dataroid_geofence_enabled')
+def dataroidSnapshotEnabled = dataroidFlag('dataroid_snapshot_enabled')
+def dataroidDbEncryptionEnabled = dataroidFlag('dataroid_db_encryption_enabled')
+def dataroidDbMigrationKeyPresent = dataroidValue('dataroid_db_encryption_key')?.matches('[0-9a-fA-F]{64}') ?: false
+
+logger.lifecycle("[Dataroid] PUSH_ENABLED = ${dataroidPushEnabled} (from ${dataroidSource('dataroid_push_enabled')})")
+logger.lifecycle("[Dataroid] GEOFENCE_ENABLED = ${dataroidGeofenceEnabled} (from ${dataroidSource('dataroid_geofence_enabled')})")
+logger.lifecycle("[Dataroid] SNAPSHOT_ENABLED = ${dataroidSnapshotEnabled} (from ${dataroidSource('dataroid_snapshot_enabled')})")
+logger.lifecycle("[Dataroid] DB_ENCRYPTION_ENABLED = ${dataroidDbEncryptionEnabled} (from ${dataroidSource('dataroid_db_encryption_enabled')}), migration key present = ${dataroidDbMigrationKeyPresent}")
+
+repositories {
+    mavenCentral()
+    google()
+    maven {
+        // Dataroid SDK Maven repository
+        url 'https://nexus.dataroid.com/repository/dataroid-sdk-android-maven/'
+    }
+}
+
+dependencies {
+    // Dataroid SDK BOM keeps core and optional addon artifacts aligned.
+    implementation platform('com.dataroid:dataroid-android-sdk-bom:4.8.2')
+    implementation 'com.dataroid:dataroid-android-sdk'
+
+    if (dataroidPushEnabled) {
+        // Dataroid SDK - Google/Firebase variant (for push notifications)
+        implementation 'com.dataroid:dataroid-android-sdk-google'
+
+        // Firebase Messaging (for push notifications)
+        implementation 'com.google.firebase:firebase-messaging:23.1.2'
+    }
+
+    if (dataroidPushEnabled || dataroidGeofenceEnabled) {
+        // Play Services Location (for geofencing and location-based notifications)
+        implementation 'com.google.android.gms:play-services-location:21.0.1'
+    }
+
+    if (dataroidSnapshotEnabled) {
+        // Dataroid SDK - Snapshot module (screen capture for funnel/path reports)
+        implementation 'com.dataroid:dataroid-android-sdk-snapshot'
+    }
+
+    if (dataroidDbEncryptionEnabled || dataroidDbMigrationKeyPresent) {
+        // SQLCipher is also needed to decrypt an existing database during migration
+        implementation 'net.zetetic:sqlcipher-android:4.13.0'
+    }
+
+    // Preserve Cordova's API 21 and Kotlin 1.8/1.9 host compatibility. The BOM
+    // defaults to database 2.2.0 (minSdk 23, Kotlin 2.x); the compat track uses
+    // Room 2.6.1 and remains supported by SDK 4.8.2.
+    constraints {
+        implementation('com.dataroid:dataroid-android-sdk-database') {
+            version {
+                strictly '1.2.0'
+            }
+        }
+    }
+}
+
+android {
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}

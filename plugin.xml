@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        id="cordova-plugin-dataroid-sdk" version="4.3.1">
+
+    <name>Dataroid</name>
+    <description>Dataroid Cordova Plugin SDK - Analytics, Push Notifications, In-App Messaging, and more</description>
+    <license>UNLICENSED</license>
+    <author>Dataroid Web Team</author>
+    <keywords>dataroid, analytics, push, notifications, in-app, messaging, cordova, plugin</keywords>
+
+    <engines>
+        <engine name="cordova" version=">=12.0.0"/>
+        <engine name="cordova-android" version=">=12.0.0"/>
+        <engine name="cordova-ios" version=">=7.0.0"/>
+    </engines>
+
+    <!-- Plugin Variables (top-level so cordova-lib variable-merge resolves defaults at install time) -->
+    <preference name="SDK_KEY"/>
+    <preference name="SERVER_URL"/>
+    <preference name="DEEPLINK_HOST" default=" "/>
+    <preference name="DEEPLINK_SCHEME" default=" "/>
+    <!-- Required on iOS: the native SDK does not initialize without an app group.
+         The placeholder default keeps Android-only installs working;
+         scripts/ios_after_plugin_install.js fails the iOS install when it is missing. -->
+    <preference name="APP_GROUP_IDENTIFIER" default=" "/>
+    <preference name="LANGUAGE_CODE" default=" "/>
+    <preference name="LOGS_ENABLED" default="false"/>
+    <preference name="PUSH_ENABLED" default="false"/>
+    <preference name="IN_APP_MESSAGING_ENABLED" default="true"/>
+    <preference name="APM_ENABLED" default="true"/>
+    <preference name="APP_INBOX_ENABLED" default="true"/>
+    <preference name="GEOFENCE_ENABLED" default="false"/>
+    <preference name="SNAPSHOT_ENABLED" default="false"/>
+    <preference name="SSL_PINNING_POLICIES" default=" "/>
+    <preference name="DB_ENCRYPTION_KEY" default=" "/>
+    <preference name="DB_ENCRYPTION_ENABLED" default="false"/>
+    <preference name="CRASH_REPORTING_ENABLED" default="false"/>
+    <preference name="CRASH_REPORTING_THREAD_COLLECTION" default="false"/>
+
+    <js-module src="www/Dataroid.js" name="Dataroid">
+        <clobbers target="Dataroid"/>
+    </js-module>
+
+    <js-module src="www/DataroidAutoCapture.js" name="DataroidAutoCapture"/>
+
+    <!-- ==================== ANDROID PLATFORM ==================== -->
+    <hook type="after_prepare" src="scripts/ssl_pinning_config.js"/>
+    <!-- Top level, not under <platform name="android">: a plain `cordova prepare`
+         or `cordova build` gives hooks an empty platform list, and Cordova then
+         skips platform-scoped hooks. The script returns early when Android is not
+         being prepared. -->
+    <hook type="after_prepare" src="scripts/android_after_plugin_install.js"/>
+
+    <platform name="android">
+        <hook type="before_plugin_install" src="scripts/android_before_plugin_install.js"/>
+        <hook type="after_plugin_install" src="scripts/ssl_pinning_config.js"/>
+        <hook type="before_plugin_uninstall" src="scripts/ssl_pinning_config.js"/>
+        <hook type="after_plugin_install" src="scripts/android_after_plugin_install.js"/>
+
+        <!-- Plugin Variables -->
+        <preference name="SDK_KEY"/>
+        <preference name="SERVER_URL"/>
+        <preference name="DEEPLINK_HOST" default=" "/>
+        <preference name="DEEPLINK_SCHEME" default=" "/>
+        <preference name="LANGUAGE_CODE" default=" "/>
+        <preference name="LOGS_ENABLED" default="false"/>
+        <preference name="PUSH_ENABLED" default="false"/>
+        <preference name="IN_APP_MESSAGING_ENABLED" default="true"/>
+        <preference name="APM_ENABLED" default="true"/>
+        <preference name="APP_INBOX_ENABLED" default="true"/>
+        <preference name="GEOFENCE_ENABLED" default="false"/>
+        <preference name="SNAPSHOT_ENABLED" default="false"/>
+        <preference name="SSL_PINNING_POLICIES" default=" "/>
+        <preference name="DB_ENCRYPTION_KEY" default=" "/>
+        <preference name="DB_ENCRYPTION_ENABLED" default="false"/>
+        <preference name="CRASH_REPORTING_ENABLED" default="false"/>
+        <preference name="CRASH_REPORTING_THREAD_COLLECTION" default="false"/>
+
+        <!--
+            GradlePluginGoogleServicesEnabled must be enabled manually by the
+            host app when PUSH_ENABLED=true. Add the following to config.xml:
+            <preference name="GradlePluginGoogleServicesEnabled" value="true" />
+        -->
+
+        <!-- Register the plugin feature -->
+        <config-file target="config.xml" parent="/*">
+            <feature name="Dataroid">
+                <param name="android-package" value="com.commencis.cordova.plugin.dataroid.DataroidPlugin"/>
+            </feature>
+        </config-file>
+
+        <!-- Store configuration in strings.xml -->
+        <config-file target="./res/values/strings.xml" parent="/resources">
+            <string name="dataroid_sdk_key">$SDK_KEY</string>
+            <string name="dataroid_server_url">$SERVER_URL</string>
+            <string name="dataroid_deeplink_host">$DEEPLINK_HOST</string>
+            <string name="dataroid_deeplink_scheme">$DEEPLINK_SCHEME</string>
+            <string name="dataroid_language_code">$LANGUAGE_CODE</string>
+            <string name="dataroid_logs_enabled">$LOGS_ENABLED</string>
+            <string name="dataroid_push_enabled">$PUSH_ENABLED</string>
+            <string name="dataroid_in_app_messaging_enabled">$IN_APP_MESSAGING_ENABLED</string>
+            <string name="dataroid_apm_enabled">$APM_ENABLED</string>
+            <string name="dataroid_app_inbox_enabled">$APP_INBOX_ENABLED</string>
+            <string name="dataroid_geofence_enabled">$GEOFENCE_ENABLED</string>
+            <string name="dataroid_snapshot_enabled">$SNAPSHOT_ENABLED</string>
+            <string name="dataroid_ssl_pinning_policies"> </string>
+            <string name="dataroid_db_encryption_key">$DB_ENCRYPTION_KEY</string>
+            <string name="dataroid_db_encryption_enabled">$DB_ENCRYPTION_ENABLED</string>
+            <string name="dataroid_crash_reporting_enabled">$CRASH_REPORTING_ENABLED</string>
+            <string name="dataroid_crash_reporting_thread_collection">$CRASH_REPORTING_THREAD_COLLECTION</string>
+        </config-file>
+
+        <!-- Base permissions (always required) -->
+        <config-file target="AndroidManifest.xml" parent="/manifest">
+            <uses-permission android:name="android.permission.INTERNET"/>
+            <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+        </config-file>
+
+        <!--
+            Conditional permissions (POST_NOTIFICATIONS, location), deep link
+            intent-filter, and google-services.json placement must be configured
+            manually by the host app developer. See the documentation for details.
+        -->
+
+        <!--
+            Dataroid SDK Auto-Init Provider.
+            initOrder=-1 ensures this runs AFTER AndroidX Startup's
+            InitializationProvider (initOrder=0) which bootstraps WorkManager.
+            The Dataroid SDK requires WorkManager at build time, so this
+            ordering prevents the IllegalStateException race condition.
+        -->
+        <config-file target="AndroidManifest.xml" parent="/manifest/application">
+            <provider
+                android:name="com.commencis.cordova.plugin.dataroid.DataroidInitProvider"
+                android:authorities="${applicationId}.dataroid-init"
+                android:exported="false"
+                android:initOrder="-1" />
+        </config-file>
+
+        <!-- Gradle configuration -->
+        <framework src="src/android/plugin.gradle" custom="true" type="gradleReference"/>
+
+        <!-- Source files -->
+        <source-file src="src/android/java/DataroidPlugin.java"
+                     target-dir="src/com/commencis/cordova/plugin/dataroid"/>
+        <source-file src="src/android/java/DataroidInitProvider.java"
+                     target-dir="src/com/commencis/cordova/plugin/dataroid"/>
+        <source-file src="src/android/java/DataroidHybridBridge.java"
+                     target-dir="src/com/commencis/cordova/plugin/dataroid"/>
+    </platform>
+
+    <!-- ==================== iOS PLATFORM ==================== -->
+    <platform name="ios">
+        <hook type="after_plugin_install" src="scripts/ssl_pinning_config.js"/>
+        <hook type="before_plugin_uninstall" src="scripts/ssl_pinning_config.js"/>
+        <hook type="after_plugin_install" src="scripts/ios_after_plugin_install.js"/>
+
+        <!-- Plugin Variables -->
+        <preference name="SDK_KEY"/>
+        <preference name="SERVER_URL"/>
+        <preference name="DEEPLINK_HOST" default=" "/>
+        <preference name="DEEPLINK_SCHEME" default=" "/>
+        <!-- Required: validated by scripts/ios_after_plugin_install.js -->
+        <preference name="APP_GROUP_IDENTIFIER" default=" "/>
+        <preference name="LANGUAGE_CODE" default=" "/>
+        <preference name="LOGS_ENABLED" default="false"/>
+        <preference name="PUSH_ENABLED" default="false"/>
+        <preference name="IN_APP_MESSAGING_ENABLED" default="true"/>
+        <preference name="APM_ENABLED" default="true"/>
+        <preference name="APP_INBOX_ENABLED" default="true"/>
+        <preference name="GEOFENCE_ENABLED" default="false"/>
+        <preference name="SNAPSHOT_ENABLED" default="false"/>
+        <preference name="SSL_PINNING_POLICIES" default=" "/>
+        <preference name="DB_ENCRYPTION_KEY" default=" "/>
+        <preference name="DB_ENCRYPTION_ENABLED" default="false"/>
+        <preference name="CRASH_REPORTING_ENABLED" default="false"/>
+        <preference name="CRASH_REPORTING_THREAD_COLLECTION" default="false"/>
+
+        <!-- Register the plugin feature -->
+        <config-file target="config.xml" parent="/*">
+            <feature name="Dataroid">
+                <param name="ios-package" value="DataroidWrapper"/>
+                <param name="onload" value="true"/>
+            </feature>
+
+            <!-- Store preferences for runtime access -->
+            <preference name="DATAROID_SDK_KEY" value="$SDK_KEY"/>
+            <preference name="DATAROID_SERVER_URL" value="$SERVER_URL"/>
+            <preference name="DATAROID_DEEPLINK_HOST" value="$DEEPLINK_HOST"/>
+            <preference name="DATAROID_DEEPLINK_SCHEME" value="$DEEPLINK_SCHEME"/>
+            <preference name="DATAROID_APP_GROUP_IDENTIFIER" value="$APP_GROUP_IDENTIFIER"/>
+            <preference name="DATAROID_LANGUAGE_CODE" value="$LANGUAGE_CODE"/>
+            <preference name="DATAROID_LOGS_ENABLED" value="$LOGS_ENABLED"/>
+            <preference name="DATAROID_PUSH_ENABLED" value="$PUSH_ENABLED"/>
+            <preference name="DATAROID_IN_APP_MESSAGING_ENABLED" value="$IN_APP_MESSAGING_ENABLED"/>
+            <preference name="DATAROID_APM_ENABLED" value="$APM_ENABLED"/>
+            <preference name="DATAROID_APP_INBOX_ENABLED" value="$APP_INBOX_ENABLED"/>
+            <preference name="DATAROID_GEOFENCE_ENABLED" value="$GEOFENCE_ENABLED"/>
+            <preference name="DATAROID_SNAPSHOT_ENABLED" value="$SNAPSHOT_ENABLED"/>
+            <preference name="DATAROID_SSL_PINNING_POLICIES" value=" "/>
+            <preference name="DATAROID_DB_ENCRYPTION_KEY" value="$DB_ENCRYPTION_KEY"/>
+            <preference name="DATAROID_DB_ENCRYPTION_ENABLED" value="$DB_ENCRYPTION_ENABLED"/>
+            <preference name="DATAROID_CRASH_REPORTING_ENABLED" value="$CRASH_REPORTING_ENABLED"/>
+            <preference name="DATAROID_CRASH_REPORTING_THREAD_COLLECTION" value="$CRASH_REPORTING_THREAD_COLLECTION"/>
+            <preference name="deployment-target" value="13.0"/>
+        </config-file>
+
+        <!--
+            iOS project configuration (Notification Service Extension, Info.plist
+            background modes, entitlements, deep link schemes, etc.) must be
+            configured manually in Xcode by the host app developer.
+        -->
+
+        <!-- Source files -->
+        <source-file src="src/ios/DataroidWrapper.m"/>
+        <source-file src="src/ios/AppDelegate+appconnect.m"/>
+        <header-file src="src/ios/DataroidWrapper.h"/>
+        <header-file src="src/ios/AppDelegate+appconnect.h"/>
+
+        <!-- CocoaPods dependency -->
+        <podspec>
+            <config>
+                <source url="https://cdn.cocoapods.org/"/>
+            </config>
+            <pods use-frameworks="true">
+                <pod name="DataroidCore" spec="4.6.4"/>
+            </pods>
+        </podspec>
+
+        <!--
+            DataroidSnapshot pod must be added manually to the Podfile
+            when SNAPSHOT_ENABLED=true.
+        -->
+    </platform>
+</plugin>
